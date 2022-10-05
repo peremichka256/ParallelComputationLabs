@@ -34,15 +34,22 @@ namespace PC_Task1
         /// <summary>
         /// Матрица пикселей
         /// </summary>
-        private int[,] _pixelMatrix;
+        private ColorValues[,] _pixelMatrix;
 
         /// <summary>
         /// Задаёт и возвращает количество столбцов матрицы
         /// </summary>
         public int MatrixWidth
         { 
-            get { return _matrixWidth; }
-            set { _matrixWidth = value; }
+            get => _matrixWidth;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException("Wrong matrix width");
+                }
+                _matrixWidth = value;
+            }
         }
 
         /// <summary>
@@ -50,8 +57,15 @@ namespace PC_Task1
         /// </summary>
         public int MatrixHeight
         {
-            get { return _matrixHeight; }
-            set { _matrixHeight = value; }
+            get => _matrixHeight;
+            set 
+            {
+                if(value < 0)
+                {
+                    throw new ArgumentException("Wrong matrix height");
+                }
+                _matrixHeight = value; 
+            }
         }
 
         /// <summary>
@@ -59,7 +73,7 @@ namespace PC_Task1
         /// </summary>
         public int PyramidLevel
         {
-            get { return _pyramidLevel; }
+            get => _pyramidLevel;
             set 
             { 
                 if(value < 0)
@@ -73,7 +87,7 @@ namespace PC_Task1
         /// <summary>
         /// Задаёт и возвращает матрицу пикселей
         /// </summary>
-        public int[,] PixelMatrix
+        public ColorValues[,] PixelMatrix
         {
             get { return _pixelMatrix; }
             set { _pixelMatrix = value; }
@@ -87,7 +101,7 @@ namespace PC_Task1
             while (_pyramidLevel > 1)
             {
                 //Создается рамка вокруг начальной матрицы
-                var extendedMatrix = new int[MatrixWidth + 2, MatrixHeight + 2];
+                var extendedMatrix = new ColorValues[MatrixWidth + 2, MatrixHeight + 2];
                 extendedMatrix[0, 0] = PixelMatrix[0, 0];
                 extendedMatrix[MatrixWidth + 1, MatrixHeight + 1] =
                     PixelMatrix[MatrixWidth - 1, MatrixHeight - 1];
@@ -110,7 +124,6 @@ namespace PC_Task1
                 }
 
                 //Перенос данных их старой матрицы в расширенную
-
                 for (var i = 0; i < MatrixWidth; i++)
                 {
                     for (var j = 0; j < MatrixHeight; j++)
@@ -132,27 +145,48 @@ namespace PC_Task1
         /// и заполняет усредненными ARGB
         /// </summary>
         /// <param name="extendedMatrix"></param>
-        public void ComputeReducedLevel(int[,] extendedMatrix)
+        public void ComputeReducedLevel(ColorValues[,] extendedMatrix)
         {
-            var reducedMatrix = new int[MatrixWidth / 2,
+            var reducedMatrix = new ColorValues[MatrixWidth / 2,
                 MatrixHeight / 2];
+
+            for (var i = 0; i < MatrixWidth / 2; i++)
+            {
+                for (var j = 0; j < MatrixHeight / 2; j++)
+                {
+                    reducedMatrix[i, j] = new ColorValues();
+                }
+            }
 
             for (var i = 0; i < MatrixWidth; i+=2)
             {
                 for (var j = 0; j < MatrixHeight; j+=2)
                 {
-
                     //Рассчитывается среднее значение в блоке
-                    var averageBlockValue = 0;
+                    var averageA = 0;
+                    var averageR = 0;
+                    var averageG = 0;
+                    var averageB = 0;
+
                     for (var k = i; k < i + BLOCK_SIZE; k++)
                     {
                         for (var m = j; m < j + BLOCK_SIZE; m++)
                         {
-                            averageBlockValue += extendedMatrix[k, m];
+                            averageA += extendedMatrix[k, m].AValue;
+                            averageR += extendedMatrix[k, m].RValue;
+                            averageG += extendedMatrix[k, m].GValue;
+                            averageB += extendedMatrix[k, m].BValue;
                         }
                     }
-                    averageBlockValue /= (BLOCK_SIZE * BLOCK_SIZE);
-                    reducedMatrix[i/2, j/2] = averageBlockValue;    
+                    averageA /= (BLOCK_SIZE * BLOCK_SIZE);
+                    averageR /= (BLOCK_SIZE * BLOCK_SIZE);
+                    averageG /= (BLOCK_SIZE * BLOCK_SIZE);
+                    averageB /= (BLOCK_SIZE * BLOCK_SIZE);
+
+                    reducedMatrix[i/2, j/2].AValue = averageA;
+                    reducedMatrix[i/2, j/2].RValue = averageR;
+                    reducedMatrix[i/2, j/2].GValue = averageG;
+                    reducedMatrix[i/2, j/2].BValue = averageB;
                 }
             }
 
@@ -170,7 +204,15 @@ namespace PC_Task1
             MatrixWidth = (int)Math.Pow(2, matrixWidth);
             MatrixHeight = (int)Math.Pow(2, matrixHeight);
             PyramidLevel = pyramidLevel;
-            PixelMatrix = new int[MatrixWidth, MatrixHeight];
+            PixelMatrix = new ColorValues[MatrixWidth, MatrixHeight];
+
+            for (var i = 0; i < MatrixWidth; i++)
+            {
+                for (var j = 0; j < MatrixHeight; j++)
+                {
+                    PixelMatrix[i,j] = new ColorValues();
+                }
+            }
         }
     }
 }

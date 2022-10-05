@@ -46,7 +46,10 @@ namespace PC_Task1
             {
                 for (int j = 0; j < _picture.MatrixHeight; j++)
                 {
-                    _picture.PixelMatrix[i,j] = bmp.GetPixel(i,j).ToArgb();
+                    _picture.PixelMatrix[i,j].AValue = bmp.GetPixel(i,j).A;
+                    _picture.PixelMatrix[i, j].RValue = bmp.GetPixel(i, j).R;
+                    _picture.PixelMatrix[i, j].GValue = bmp.GetPixel(i, j).G;
+                    _picture.PixelMatrix[i, j].BValue = bmp.GetPixel(i, j).B;
                 }
             }
             pictureBoxMatrix.Width = _picture.MatrixWidth;
@@ -59,7 +62,10 @@ namespace PC_Task1
             {
                 for (int j = 0; j < _picture.MatrixHeight; j++)
                 {
-                    bmp.SetPixel(i,j, Color.FromArgb(_picture.PixelMatrix[i,j]));
+                    bmp.SetPixel(i, j, Color.FromArgb(_picture.PixelMatrix[i, j].AValue,
+                        _picture.PixelMatrix[i, j].RValue,
+                        _picture.PixelMatrix[i, j].GValue,
+                        _picture.PixelMatrix[i, j].BValue));
                 }
             }
         }
