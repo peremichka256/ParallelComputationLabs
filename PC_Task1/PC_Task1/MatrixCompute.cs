@@ -12,6 +12,23 @@ namespace PC_Task1
     public class MatrixCompute
     {
         /// <summary>
+        /// Количество потоков
+        /// </summary>
+        private int _streamCount;
+
+        /// <summary>
+        /// Переменная определяющая на каком индексе 
+        /// разделять матрицу по горизонтали
+        /// </summary>
+        private int _horizontalSplitter;
+
+        /// <summary>
+        /// Переменная определяющая на каком индексе 
+        /// разделять матрицу по вертикали
+        /// </summary>
+        private int _verticalSplitter;
+
+        /// <summary>
         /// Размерность одного блока
         /// </summary>
         const int BLOCK_SIZE = 4;
@@ -35,6 +52,78 @@ namespace PC_Task1
         /// Матрица пикселей
         /// </summary>
         private ColorValues[,] _pixelMatrix;
+
+        /// <summary>
+        /// Количество потоков
+        /// </summary>
+        private int StreamCount
+        {
+            get => _streamCount;
+            set 
+            { 
+                if(value < 0)
+                {
+                    throw new ArgumentException("Wrong stream count");
+                }
+                _streamCount = value; 
+            }
+        }
+
+        /// <summary>
+        /// Свойство определяющие горизонтальный 
+        /// разделитель в зависимости от потоков
+        /// </summary>
+        private int HorizontalSplitter
+        {
+            get => _horizontalSplitter;
+            set
+            {
+                if(value == 1)
+                {
+                    _horizontalSplitter = 1;
+                }
+                else if (value == 2)
+                {
+                    _horizontalSplitter = 2;
+                }
+                else if (value == 4)
+                {
+                    _horizontalSplitter = 2;
+                }
+                else if (value == 16)
+                {
+                    _horizontalSplitter = 4;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Свойство определяющие вертикальный 
+        /// разделитель в зависимости от потоков
+        /// </summary>
+        private int VerticalSplitter
+        {
+            get => _verticalSplitter;
+            set
+            {
+                if (value == 1)
+                {
+                    _verticalSplitter = 1;
+                }
+                if (value == 2)
+                {
+                    _verticalSplitter = 1;
+                }
+                else if (value == 4)
+                {
+                    _verticalSplitter = 2;
+                }
+                else if (value == 16)
+                {
+                    _verticalSplitter = 4;
+                }
+            }
+        }
 
         /// <summary>
         /// Задаёт и возвращает количество столбцов матрицы
@@ -111,7 +200,7 @@ namespace PC_Task1
 
                 for (var i = 0; i < MatrixWidth; i++)
                 {
-                    extendedMatrix[i+1, 0] = _pixelMatrix[i, 0];
+                    extendedMatrix[i + 1, 0] = _pixelMatrix[i, 0];
                     extendedMatrix[i + 1, MatrixHeight + 1] 
                         = _pixelMatrix[i, MatrixHeight - 1];
                 }
@@ -158,16 +247,120 @@ namespace PC_Task1
                 }
             }
 
-            for (var i = 0; i < MatrixWidth; i+=2)
+            if (StreamCount == 1)
             {
-                for (var j = 0; j < MatrixHeight; j+=2)
+                //Один поток
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, 0);
+            }
+            else if (StreamCount == 2)
+            {
+                //Два потока
+                Task task1 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, 0));
+                Task task2 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2, 0));
+
+                task1.Wait();
+                task2.Wait();
+            }
+            else if (StreamCount == 4)
+            {
+                //Четыре потока
+                Task task1 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, 0));
+                Task task2 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, MatrixHeight / 2));
+                Task task3 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2, 0));
+                Task task4 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2,
+                    MatrixHeight / 2));
+
+                task1.Wait();
+                task2.Wait();
+                task3.Wait();
+                task4.Wait();
+            }
+            else if (StreamCount == 16)
+            {
+                //Шестнадцать потоков
+                Task task1 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, 0));
+                Task task2 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, (MatrixHeight / 4) * 1));
+                Task task3 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, MatrixHeight / 2));
+                Task task4 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, 0, (MatrixHeight / 4) * 3));
+
+                Task task5 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 1, 0));
+                Task task6 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 1, (MatrixHeight / 4) * 1));
+                Task task7 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 1, MatrixHeight / 2));
+                Task task8 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 1, (MatrixHeight / 4) * 3));
+
+                Task task9 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2, 0));
+                Task task10 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2, (MatrixHeight / 4) * 1));
+                Task task11 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2, MatrixHeight / 2));
+                Task task12 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, MatrixWidth / 2, (MatrixHeight / 4) * 3));
+
+                Task task13 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 3, 0));
+                Task task14 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 3, (MatrixHeight / 4) * 1));
+                Task task15 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 3, MatrixHeight / 2));
+                Task task16 = Task.Factory.StartNew(() =>
+                CalculateAverageValues(extendedMatrix, reducedMatrix, (MatrixWidth / 4) * 3, (MatrixHeight / 4) * 3));
+
+                task1.Wait();
+                task2.Wait();
+                task3.Wait();
+                task4.Wait();
+                task5.Wait();
+                task6.Wait();
+                task7.Wait();
+                task8.Wait();
+                task9.Wait();
+                task10.Wait();
+                task11.Wait();
+                task12.Wait();
+                task13.Wait();
+                task14.Wait();
+                task15.Wait();
+                task16.Wait();
+            }
+
+            _pixelMatrix = reducedMatrix;
+        }
+
+        /// <summary>
+        /// Метод расчитывающий 
+        /// </summary>
+        /// <param name="extendedMatrix"></param>
+        /// <param name="reducedMatrix"></param>
+        /// <param name="indexI"></param>
+        /// <param name="indexJ"></param>
+        private void CalculateAverageValues(ColorValues[,] extendedMatrix, 
+            ColorValues[,] reducedMatrix, int indexI, int indexJ)
+        {
+            for (var i = indexI; i < indexI + (MatrixWidth / HorizontalSplitter); i += 2)
+            {
+                for (var j = indexJ; j < indexJ + (MatrixHeight / VerticalSplitter); j += 2)
                 {
                     //Рассчитывается среднее значение в блоке
                     var averageA = 0;
                     var averageR = 0;
                     var averageG = 0;
                     var averageB = 0;
-
+        
                     for (var k = i; k < i + BLOCK_SIZE; k++)
                     {
                         for (var m = j; m < j + BLOCK_SIZE; m++)
@@ -178,19 +371,18 @@ namespace PC_Task1
                             averageB += extendedMatrix[k, m].BValue;
                         }
                     }
+        
                     averageA /= (BLOCK_SIZE * BLOCK_SIZE);
                     averageR /= (BLOCK_SIZE * BLOCK_SIZE);
                     averageG /= (BLOCK_SIZE * BLOCK_SIZE);
                     averageB /= (BLOCK_SIZE * BLOCK_SIZE);
-
-                    reducedMatrix[i/2, j/2].AValue = averageA;
-                    reducedMatrix[i/2, j/2].RValue = averageR;
-                    reducedMatrix[i/2, j/2].GValue = averageG;
-                    reducedMatrix[i/2, j/2].BValue = averageB;
+        
+                    reducedMatrix[i / 2, j / 2].AValue = averageA;
+                    reducedMatrix[i / 2, j / 2].RValue = averageR;
+                    reducedMatrix[i / 2, j / 2].GValue = averageG;
+                    reducedMatrix[i / 2, j / 2].BValue = averageB;
                 }
             }
-
-            _pixelMatrix = reducedMatrix;
         }
 
         /// <summary>
@@ -199,20 +391,24 @@ namespace PC_Task1
         /// <param name="matrixWidth">Ширина изображения</param>
         /// <param name="matrixHeight">Высота изображения</param>
         /// <param name="pyramidLevel">Уровень уменьшения</param>
-        public MatrixCompute(int matrixWidth, int matrixHeight, int pyramidLevel)
+        public MatrixCompute(int matrixWidth, int matrixHeight, int pyramidLevel, int streamCount)
         {
             MatrixWidth = (int)Math.Pow(2, matrixWidth);
             MatrixHeight = (int)Math.Pow(2, matrixHeight);
             PyramidLevel = pyramidLevel;
+            StreamCount = streamCount;
+            HorizontalSplitter = StreamCount;
+            VerticalSplitter = StreamCount;
             PixelMatrix = new ColorValues[MatrixWidth, MatrixHeight];
 
             for (var i = 0; i < MatrixWidth; i++)
             {
                 for (var j = 0; j < MatrixHeight; j++)
                 {
-                    PixelMatrix[i,j] = new ColorValues();
+                    PixelMatrix[i, j] = new ColorValues();
                 }
             }
+            StreamCount = streamCount;
         }
     }
 }

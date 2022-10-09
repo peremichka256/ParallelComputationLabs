@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,17 +22,22 @@ namespace PC_Task1
         /// <summary>
         /// Ширина изображения, D
         /// </summary>
-        private int D = 12;
+        private int D = 13;
 
         /// <summary>
         /// Высота изображения, M
         /// </summary>
-        private int M = 11;
+        private int M = 12;
 
         /// <summary>
         /// Уровень гауссовой матрицы
         /// </summary>
-        private int N = 5;
+        private int N = 7;
+
+        /// <summary>
+        /// Только 1, 2, 4 или 16
+        /// </summary>
+        private int _streamCount = 4;
 
         public MainForm()
         {
@@ -39,8 +46,8 @@ namespace PC_Task1
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            _picture = new MatrixCompute(D, M, N);
-            Bitmap bmp = new Bitmap(Image.FromFile(@"E:\Рабочий стол\ПВиС\456128.jpg"));
+            _picture = new MatrixCompute(D, M, N, _streamCount);
+            Bitmap bmp = new Bitmap(Image.FromFile(@"E:\Рабочий стол\ПВиС\8192x4096.jpg"));
 
             for (var i = 0; i < _picture.MatrixWidth; i++)
             {
@@ -52,12 +59,20 @@ namespace PC_Task1
                     _picture.PixelMatrix[i, j].BValue = bmp.GetPixel(i, j).B;
                 }
             }
+
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            using (StreamWriter writter = new StreamWriter(@"E:\Рабочий стол\log.txt", true))
+            {
+                _picture.MatrixCompilation();
+                writter.WriteLineAsync($"{ stopWatch.ElapsedMilliseconds}" +
+                    $" ms\t{_streamCount} потока");
+                writter.Flush();
+            }
+
             pictureBoxMatrix.Width = _picture.MatrixWidth;
             pictureBoxMatrix.Height = _picture.MatrixHeight;
             pictureBoxMatrix.Image = bmp;
-
-            _picture.MatrixCompilation();
-
             for (var i = 0; i < _picture.MatrixWidth; i++)
             {
                 for (int j = 0; j < _picture.MatrixHeight; j++)

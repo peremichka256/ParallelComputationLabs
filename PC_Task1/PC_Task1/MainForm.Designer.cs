@@ -45,7 +45,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(120, 70);
+            this.ClientSize = new System.Drawing.Size(120, 71);
             this.Controls.Add(this.pictureBoxMatrix);
             this.Name = "MainForm";
             this.Text = "PC_Task1";
